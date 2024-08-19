@@ -1,102 +1,122 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { StyleSheet, Image, Platform } from 'react-native';
+// index.js
+import React, { useState } from 'react';
+import { View, Text, Button, TextInput, StyleSheet, SafeAreaView, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import axios from 'axios';
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+const WeatherApp = () => {
+  const [city, setCity] = useState(''); // Holder den aktuelle by
+  const [weather, setWeather] = useState(null); // Holder vejrinformation
+  const [error, setError] = useState(''); // Holder fejlmeddelelser
 
-export default function TabTwoScreen() {
+  // Funktion til at hente vejrinformation
+  const fetchWeather = async () => {
+    try {
+      const response = await axios.get('https://api.openweathermap.org/data/2.5/weather', {
+        params: {
+          q: city,
+          appid: 'adedf584a288b61edece573a8f4527d1', // Erstat med din API-nøgle
+          units: 'metric'
+        }
+      });
+      setWeather(response.data); // Sætter vejrinformationen
+      setError(''); // Nulstiller fejlmeddelelser
+      Keyboard.dismiss(); // Skjul tastaturet efter at have hentet vejrinformation
+    } catch (err) {
+      setError('Byen blev ikke fundet'); // Sætter en fejlmeddelelse
+      setWeather(null); // Nulstiller vejrinformation
+      Keyboard.dismiss();
+    }
+  };
+
+  // Funktion til at håndtere formularindsendelse
+  const handleSubmit = () => {
+    fetchWeather(); // Hent vejrinformation
+    Keyboard.dismiss(); 
+  };
+  
+  // Variabler til vejrinformation
+  const weatherName = weather?.name || 'Ingen bydata'; // Navn på byen
+  const weatherTemp = weather?.main?.temp !== undefined ? `${weather.main.temp}°C` : 'N/A'; // Temperatur
+ 
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={<Ionicons size={310} name="code-slash" style={styles.headerImage} />}>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user's current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText> library
-          to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.innerContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Indtast by"
+          value={city}
+          onChangeText={setCity} // Opdater by-variabel ved ændring
+        />
+        <Button title="Søg" onPress={fetchWeather} />
+        {error ? (
+          <Text style={styles.error}>{error}</Text> // Vis fejlmeddelelse
+        ) : weather ? (
+          <View style={styles.weatherContainer}>
+            <Text style={styles.city}>{weatherName}</Text>
+            <Text style={styles.temp}>{weatherTemp}</Text>
+            
+          </View>
+        ) : null}
+      </View>
+    </SafeAreaView>
   );
-}
+};
 
+// Stilarter til komponenterne
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F0F4F8', // Lys gråblå baggrund
+    padding: 20 // Generel padding for container
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  innerContainer: {
+    width: '90%', // Øget bredde for bedre afstand på mindre skærme
+    alignItems: 'center'
   },
+  input: {
+    height: 45, // Lidt højere inputfelt for bedre touchmål
+    borderColor: '#4A90E2', // Lys blå kantfarve
+    borderWidth: 1,
+    width: '100%',
+    
+    paddingHorizontal: 12, // Øget padding for inputfelt
+    marginBottom: 20, // Øget margin nederst for bedre afstand
+    color: '#333333', // Mørkegrå tekstfarve
+    backgroundColor: '#FFFFFF', // Hvid baggrundsfarve for input
+    borderRadius: 8 // Lidt større border radius for et moderne udseende
+  },
+  weatherContainer: {
+    
+    alignItems: 'center',
+    marginVertical: 20 // Tilføjet vertikal margin for afstand omkring vejrinformation
+  },
+  city: {
+    fontSize: 26, // Lidt større skriftstørrelse for bedre læsbarhed
+    fontWeight: 'bold',
+    color: '#2C3E50',
+    marginBottom: 8 // Tilføjet margin nederst for afstand fra temperatur
+  },
+  temp: {
+    fontSize: 52, // Større skriftstørrelse for fremhævelse
+    fontWeight: 'bold',
+    color: '#E74C3C',
+    marginBottom: 8 // Tilføjet margin nederst for afstand fra beskrivelse
+  },
+  description: {
+    fontSize: 20, // Lidt større skriftstørrelse for bedre læsbarhed
+    color: '#7F8C8D',
+    textAlign: 'center' // Centreret tekstjustering for bedre præsentation
+  },
+  error: {
+    color: '#E74C3C', // Rød farve til fejlmeddelelser
+    fontWeight: 'bold',
+    marginTop: 10, // Tilføjet margin øverst for afstand fra andre elementer
+    textAlign: 'center' // Centreret tekstjustering for fejlmeddelelser
+  }
+  
 });
+
+export default WeatherApp;
