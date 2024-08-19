@@ -61,7 +61,7 @@ export default function NoteApp() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    padding: 16.2,
     backgroundColor: '#1e3a5f', // Dark Blue Background
   },
   header: {
